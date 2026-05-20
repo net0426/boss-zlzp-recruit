@@ -10,6 +10,21 @@
 
 </div>
 
+## 📸 界面预览
+
+<div align="center">
+
+### 主程序界面
+![主程序界面](https://raw.githubusercontent.com/net0426/screenshots/main/%E7%A8%8B%E5%BA%8F%E6%88%AA%E5%9B%BE.png)
+
+### 打招呼功能
+![打招呼功能](https://raw.githubusercontent.com/net0426/screenshots/main/%E6%89%93%E6%8B%9B%E5%91%BC.png)
+
+### AI 智能判断
+![AI 智能判断](https://raw.githubusercontent.com/net0426/screenshots/main/AI%E5%88%A4%E6%96%AD.png)
+
+</div>
+
 ## 📋 目录
 
 - [功能特点](#功能特点)
