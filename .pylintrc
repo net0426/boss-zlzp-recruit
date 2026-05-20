@@ -1,0 +1,103 @@
+# ===========================================
+# Pylint 配置文件
+# ===========================================
+# 项目：招聘岗位智能筛选系统
+# ===========================================
+
+[MASTER]
+# 忽略的错误
+disable=
+    C0111,  # missing-docstring (类/函数缺少文档字符串)
+    C0103,  # invalid-name (变量名不符合规范)
+    R0903,  # too-few-public-methods (类方法太少)
+    R0913,  # too-many-arguments (函数参数太多)
+    R0914,  # too-many-locals (局部变量太多)
+    R0801,  # duplicate-code (重复代码)
+    R0902,  # too-many-instance-attributes (实例属性太多)
+
+# 忽略的文件/目录
+ignore=__pycache__,venv,.venv,build,dist,.git,logs
+
+# 最大行长度
+max-line-length=120
+
+# 最大嵌套深度
+max-nested-blocks=5
+
+# 目标分数（满分10分）
+score=no
+
+[MESSAGES CONTROL]
+# 启用特定消息
+enable=
+    useless-object-inheritance,
+    consider-using-enumerate,
+
+[REPORTS]
+# 输出格式
+output-format=text
+msg-template={path}:{line}: {category} ({msg_id}, {symbol}) {message}
+
+[BASIC]
+# 命名风格
+good-names=i,j,k,ex,Run,_,db,id,df
+
+# 类命名
+class-naming-style=PascalCase
+class-rgx=[A-Z][a-zA-Z0-9]*$
+
+# 函数命名
+function-naming-style=snake_case
+function-rgx=[a-z_][a-z0-9_]{2,30}$
+
+# 变量命名
+variable-naming-style=snake_case
+
+# 常量命名
+const-naming-style=UPPER_CASE
+
+# 模块命名
+module-naming-style=snake_case
+
+[FORMAT]
+# 最大行长度
+max-line-length=120
+
+# 行尾空格
+max-line-length=120
+
+[DESIGN]
+# 最大函数参数数量
+max-args=8
+
+# 最大返回值数量
+max-returns=6
+
+# 最大局部变量数量
+max-locals=15
+
+# 类最大公共方法数
+max-public-methods=20
+
+# 类最大实例属性数
+max-instance-attrs=10
+
+[SIMILARITIES]
+# 忽略的重复代码行数
+min-similarity-lines=10
+
+# 忽略的注释中的重复代码
+ignore-comments=yes
+ignore-docstrings=yes
+ignore-imports=yes
+
+[TYPECHECK]
+# 忽略某些模块的导入错误
+ignored-modules=DrissionPage,PySide6
+
+# 忽略某些类的成员检查
+ignored-classes=PySide6,QMainWindow,QApplication
+
+[MISCELLANEOUS]
+# 忽略的注释标记
+notes=FIXME,XXX,TODO

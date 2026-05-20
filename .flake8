@@ -1,0 +1,45 @@
+# ===========================================
+# Flake8 配置文件
+# ===========================================
+# 项目：招聘岗位智能筛选系统
+# ===========================================
+
+[flake8]
+# 最大行长度
+max-line-length = 120
+
+# 忽略的错误
+extend-ignore =
+    E203,  # whitespace before ':'
+    W503,  # line break before binary operator
+    E501,  # line too long (已通过 max-line-length 处理)
+
+# 排除的目录
+exclude =
+    .git,
+    __pycache__,
+    venv,
+    .venv,
+    build,
+    dist,
+    .eggs,
+    *.egg-info,
+    logs,
+    .github
+
+# 忽略的错误文件
+per-file-ignores =
+    __init__.py:F401,F403
+
+# 最大复杂度
+max-complexity = 10
+
+# 排除的特定错误
+ignore =
+    E203,
+    W503
+
+# 统计输出
+count = True
+statistics = True
+show-source = True
