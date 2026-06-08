@@ -34,6 +34,7 @@
 - [配置说明](#配置说明)
 - [使用方法](#使用方法)
 - [AI 配置](#ai-配置)
+- [邮件功能](#邮件功能)
 
 ## ✨ 功能特点
 
@@ -62,6 +63,13 @@
 - 自定义经验/学历要求
 - 自定义投递数量
 
+### 📧 邮件通知功能
+- 支持 QQ邮箱、163邮箱、Gmail 等主流邮箱
+- 支持发送纯文本邮件
+- 支持发送带图片的邮件
+- 支持 SSL/TLS 加密传输
+- 投递完成后自动通知
+
 ## 📁 项目结构
 
 ```
@@ -80,7 +88,8 @@
 │   ├── login_manager.py     # 登录管理
 │   ├── get_web.py           # Web驱动管理
 │   ├── start_copaw.py       # AI服务管理
-│   └── AI_page.py           # AI工具类
+│   ├── AI_page.py           # AI工具类
+│   └── email_page.py        # 邮件发送工具
 ├── utils/                   # 工具模块
 │   ├── __init__.py
 │   └── log_utils.py         # 日志工具
@@ -142,6 +151,14 @@ BOSS_MAX_JOB=1
 ZLZP_MAX_JOB=1
 WORK_EXPERIENCE=
 DEGREE_REQUIREMENT=
+
+# 邮件通知配置（可选）
+SMTP_SERVER=smtp.qq.com
+SMTP_PORT=465
+USE_SSL=true
+SENDER_EMAIL=your_email@qq.com
+SENDER_PASSWORD=your_auth_code
+RECEIVER_EMAIL=receiver_email@example.com
 ```
 
 ### 3. 准备 AI 提示词
@@ -154,6 +171,8 @@ DEGREE_REQUIREMENT=
 
 ### .env 配置项
 
+#### 招聘平台配置
+
 | 配置项 | 说明 | 示例 |
 |--------|------|------|
 | `TARGET_JOB_NAME` | 目标岗位名称 | `软件测试` |
@@ -162,9 +181,25 @@ DEGREE_REQUIREMENT=
 | `ZLZP_MAX_JOB` | 智联招聘最大投递数 | `10` |
 | `WORK_EXPERIENCE` | 工作经验要求 | `3-5年` |
 | `DEGREE_REQUIREMENT` | 学历要求 | `本科` |
+
+#### AI 服务配置
+
+| 配置项 | 说明 | 示例 |
+|--------|------|------|
 | `AI_API_URL` | AI API 地址 | `http://127.0.0.1:8080/v1/chat/completions` |
 | `LLAMA_SERVER_PATH` | llama-server 路径 | `D:\AI-python\llama.cpp\...\llama-server.exe` |
 | `LLAMA_MODEL_PATH` | 模型文件路径 | `D:\AI-python\...\Qwen2.5-7B-Instruct-1M-Q4_K_M.gguf` |
+
+#### 邮件通知配置（可选）
+
+| 配置项 | 说明 | 示例 |
+|--------|------|------|
+| `SMTP_SERVER` | SMTP 服务器地址 | `smtp.qq.com` |
+| `SMTP_PORT` | SMTP 端口号 | `465` |
+| `USE_SSL` | 是否使用 SSL 加密 | `true` |
+| `SENDER_EMAIL` | 发件人邮箱地址 | `your_email@qq.com` |
+| `SENDER_PASSWORD` | 邮箱密码或授权码 | `your_auth_code` |
+| `RECEIVER_EMAIL` | 收件人邮箱地址 | `receiver_email@example.com` |
 
 ## 📖 使用方法
 
@@ -288,6 +323,73 @@ llama-server -m <模型路径> -c 6800 -n 256 --port 8080
 
 支持本地 AI 模型进行岗位智能筛选，可自定义筛选标准。
 
+## 📧 邮件功能
+
+### 功能概述
+
+邮件通知功能可以在投递完成后自动发送通知邮件，支持纯文本和带图片的邮件。邮件模块位于 [`pages/email_page.py`](d:\pyside6\bos\招聘联系测试\pages\email_page.py)。
+
+### 支持的邮箱服务
+
+| 邮箱服务 | SMTP 服务器 | SSL 端口 | TLS 端口 |
+|---------|-------------|---------|---------|
+| QQ邮箱 | smtp.qq.com | 465 | 587 |
+| 163邮箱 | smtp.163.com | 465 | 587 |
+| Gmail | smtp.gmail.com | 465 | 587 |
+| Outlook | smtp.office365.com | - | 587 |
+
+### QQ邮箱配置说明
+
+1. 登录 QQ 邮箱网页版
+2. 进入「设置」→「账户」
+3. 开启「POP3/SMTP 服务」或「IMAP/SMTP 服务」
+4. 按提示完成授权，获取「授权码」
+5. 在 `.env` 文件中配置：
+   - `SENDER_EMAIL`：你的 QQ 邮箱地址
+   - `SENDER_PASSWORD`：步骤4获取的授权码（不是登录密码！）
+
+### 163邮箱配置说明
+
+1. 登录 163 邮箱网页版
+2. 进入「设置」→「POP3/SMTP/IMAP」
+3. 开启「IMAP/SMTP 服务」或「POP3/SMTP 服务」
+4. 按提示完成授权，获取「授权码」
+5. 在 `.env` 文件中配置：
+   - `SENDER_EMAIL`：你的 163 邮箱地址
+   - `SENDER_PASSWORD`：步骤4获取的授权码
+
+### 使用邮件功能
+
+#### 1. 在代码中导入并使用
+
+```python
+from pages.email_page import send_email
+
+# 发送纯文本邮件
+send_email(
+    subject="投递完成通知",
+    message="你好！岗位投递任务已完成，共投递了 X 个岗位。"
+)
+
+# 发送带图片的邮件
+send_email(
+    subject="投递完成通知",
+    message="你好！岗位投递任务已完成，截图如下：",
+    image_path="path/to/screenshot.png"
+)
+```
+
+#### 2. 独立测试邮件发送
+
+```bash
+python -c "from pages.email_page import send_email; send_email('测试邮件', '这是一封测试邮件')"
+```
+
+### 邮件发送结果
+
+- 成功返回 `True`
+- 失败返回 `False` 并在控制台输出错误信息
+
 ## 📊 日志说明
 
 所有运行日志保存在 [`logs/`](d:\pyside6\bos\招聘联系测试\logs) 目录：
@@ -297,6 +399,12 @@ llama-server -m <模型路径> -c 6800 -n 256 --port 8080
 ## 🧪 测试
 
 ```bash
+# 测试邮件配置
+python -c "from pages.email_page import load_env_config; print(load_env_config())"
+
+# 测试邮件发送
+python -c "from pages.email_page import send_email; send_email('测试邮件', '这是一封测试邮件')"
+
 # 测试导入是否正常
 python test_imports.py
 

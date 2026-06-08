@@ -41,3 +41,13 @@ AI_CONFIG = {
     'CTX_SIZE': 6800,
     'BATCH_SIZE': 256,
 }
+
+# 邮件配置
+EMAIL_CONFIG = {
+    'SMTP_SERVER': os.getenv('SMTP_SERVER'),
+    'SMTP_PORT': os.getenv('SMTP_PORT'),
+    'USE_SSL': os.getenv('USE_SSL', 'true').lower() in ('true', '1', 'yes'),
+    'SENDER_EMAIL': os.getenv('SENDER_EMAIL'),
+    'SENDER_PASSWORD': os.getenv('SENDER_PASSWORD'),
+    'RECEIVER_EMAIL': os.getenv('RECEIVER_EMAIL'),
+}
