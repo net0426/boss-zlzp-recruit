@@ -399,7 +399,9 @@ class LoginSoftware(QMainWindow):
     def __init__(self):
         super().__init__()
         self.config = load_env_config()
+        # 不使用 Qt.WindowStaysOnTopHint，避免窗口创建时的问题
         self.setWindowFlags(Qt.FramelessWindowHint)
+        self._is_stay_on_top = True
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.resize(700, 750)
 
@@ -494,6 +496,21 @@ class LoginSoftware(QMainWindow):
         self._business_thread = None
         self._stop_event = None
         self._is_business_running = False
+        self._initial_topmost_set = False
+
+    def showEvent(self, event):
+        """窗口显示事件 - 设置初始置顶状态"""
+        super().showEvent(event)
+        if not self._initial_topmost_set and self._is_stay_on_top:
+            try:
+                import win32gui
+                import win32con
+                hwnd = int(self.winId())
+                win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0,
+                                     win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
+            except ImportError:
+                pass
+            self._initial_topmost_set = True
 
     def closeEvent(self, event):
         """窗口关闭时触发：直接清理资源并退出（无弹窗）"""
@@ -572,14 +589,49 @@ class LoginSoftware(QMainWindow):
 
         title_label = QLabel("可视岗位管理程序")
         title_label.setStyleSheet("""
-            color: #333333; 
-            font-size: 14px; 
+            color: #333333;
+            font-size: 14px;
             font-weight: bold;
             background: transparent;
             font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
         """)
         h_layout.addWidget(title_label)
         h_layout.addStretch()
+
+        # 添加固定最上层按钮（默认激活状态）
+        self.btn_pin = QPushButton("📌")
+        self.btn_pin.setFixedSize(30, 30)
+        self.btn_pin.setCheckable(True)
+        self.btn_pin.setChecked(True)  # 默认选中
+        # 使用与登录按钮相同的紫色渐变
+        self.btn_pin.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #667eea, stop:1 #764ba2);
+                color: white;
+                border: none;
+                font-size: 14px;
+                border-radius: 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #5a6fd6, stop:1 #6a4198);
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #4c5ec9, stop:1 #5a3587);
+            }
+            QPushButton:!checked {
+                background: transparent;
+                color: #333333;
+            }
+            QPushButton:!checked:hover {
+                background: #e5e7eb;
+            }
+        """)
+        self.btn_pin.clicked.connect(self.toggle_stay_on_top)
+        h_layout.addWidget(self.btn_pin)
 
         btn_min = QPushButton("─")
         btn_min.setFixedSize(30, 30)
@@ -624,6 +676,39 @@ class LoginSoftware(QMainWindow):
         if hasattr(self, '_drag_pos'):
             del self._drag_pos
         super().mouseReleaseEvent(event)
+
+    def toggle_stay_on_top(self):
+        """切换窗口固定最上层状态（使用 Windows API，无闪烁）"""
+        # 切换状态
+        self._is_stay_on_top = not self._is_stay_on_top
+
+        # 更新按钮的 checked 状态（样式表会自动处理样式变化）
+        self.btn_pin.setChecked(self._is_stay_on_top)
+
+        # 使用 Windows API 来设置置顶，避免窗口重新创建导致的闪烁
+        try:
+            import win32gui
+            import win32con
+
+            # 获取窗口句柄
+            hwnd = int(self.winId())
+
+            if self._is_stay_on_top:
+                # 设置窗口为最顶层
+                win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0,
+                                     win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
+            else:
+                # 取消最顶层，恢复正常
+                win32gui.SetWindowPos(hwnd, win32con.HWND_NOTOPMOST, 0, 0, 0, 0,
+                                     win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
+        except ImportError:
+            # 如果没有 pywin32 库，回退到原来的方法
+            current_flags = self.windowFlags()
+            if self._is_stay_on_top:
+                self.setWindowFlags(current_flags | Qt.WindowStaysOnTopHint)
+            else:
+                self.setWindowFlags(current_flags & ~Qt.WindowStaysOnTopHint)
+            self.show()
 
     def update_start_button_state(self):
         """检查所有软件是否都已登录，并更新启动按钮和登录按钮的文字状态"""
@@ -1423,6 +1508,7 @@ class BusinessThread(QThread):
             import os
             from business.recruit_business import RecruitBusiness
             from pages.get_web import DriverManager
+            from pages.email_page import send_email
 
             if self.job:
                 os.environ['TARGET_JOB_NAME'] = self.job
@@ -1435,16 +1521,26 @@ class BusinessThread(QThread):
 
             app = RecruitBusiness(headless=False)
 
+            # ✅ 与 main.py 同步：根据平台执行并发送邮件
+            if self.platform in ["boss", "all"]:
+                if self.stop_event.is_set():
+                    print("中断：跳过BOSS处理。")
+                    return
+                aip = app.boss_ints()
+                if aip:
+                    send_email('BOSS运行结束', ','.join(aip) if isinstance(aip, list) else aip)
+                else:
+                    send_email('BOSS运行失败', '未登录')
+
             if self.platform in ["zlzp", "all"]:
                 if self.stop_event.is_set():
                     print("中断：跳过智联处理。")
                     return
-                app.zlzp_ints()
-            if self.platform in ["boss", "all"]:
-                if self.stop_event.is_set():
-                    print("中断：跳过boss处理。")
-                    return
-                app.boss_ints()
+                aip = app.zlzp_ints()
+                if aip:
+                    send_email('智联招聘运行结束', ','.join(aip) if isinstance(aip, list) else aip)
+                else:
+                    send_email('智联招聘运行失败', '未登录')
 
             DriverManager.close_driver()
             print("业务执行完成")
