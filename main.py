@@ -41,11 +41,13 @@ if __name__ == '__main__':
     try:
         app = RecruitBusiness(headless=True)
         if args.platform in ["boss", "all"]:
-            if app.boss_ints(): send_email('BOSS运行错误','')
-            else: send_email('BOSS运行成功','')
+            aip = app.boss_ints()
+            if aip : send_email('BOSS运行结束',','.join(aip))
+            else : send_email('BOSS运行失败','未登录')
         if args.platform in ["zlzp", "all"]:
-            if app.zlzp_ints(): send_email('智联招聘运行错误','')
-            else: send_email('智联招聘运行成功', '')
+            aip = app.zlzp_ints()
+            if aip : send_email('智联招聘运行结束',','.join(aip))
+            else: send_email('智联招聘运行失败', '未登录')
     except KeyboardInterrupt:
         print("\n程序被用户中断")
     except Exception as e:
